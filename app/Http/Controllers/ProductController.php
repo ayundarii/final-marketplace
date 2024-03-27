@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 class ProductController extends Controller
 {
     use ImageUploader;
+
     /**
      * Display a listing of the resource.
      */
@@ -19,6 +20,11 @@ class ProductController extends Controller
     {
         // Retrieve products with eager loading of image
         $products = Product::with('category', 'brand', 'image', 'user')->get();
+
+        if (auth("sanctum")->check()) {
+            $userId = auth("sanctum")->id();
+            $products = $products->where('user_id', $userId);
+        }
 
         return response()->json([
             'message' => 'Products successfully retrieved',
@@ -95,7 +101,7 @@ class ProductController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        //not sure how to do updated yet
     }
 
     /**

@@ -8,6 +8,7 @@ use App\Traits\ImageUploader;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 class CategoryController extends Controller
 {
@@ -115,6 +116,46 @@ class CategoryController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $category = Category::find($id);
+
+        if (!$category) {
+            return response()->json(['message' => 'Category not found'], 404);
+        }
+
+        if ($category->image) {
+            Storage::delete($category->image->url);  
+            $category->image()->delete(); 
+        }
+
+        $category->delete();
+
+        return response()->json([
+            'message' => 'Brand deleted successfully',
+            'brand' => $category,
+        ], 200);
+    }
+
+     /**
+     * Restore the specified resource from storage.
+     */
+    public function restore(string $id)
+    {
+        $category = Category::withTrashed()->where('id', $id)->firstOrFail();
+
+        if (!$category) {
+            return response()->json(['message' => 'Category not found'], 404);
+        }
+
+        // Restore the associated image (if any)
+        if ($category->image && $category->image->trashed()) {
+            $category->image->restore();
+        }
+
+        $category->restore();
+
+        return response()->json([
+            'message' => 'Category restored successfully',
+            'category' => $category,
+        ], 200);
     }
 }
